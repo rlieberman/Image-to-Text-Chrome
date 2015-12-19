@@ -1,51 +1,107 @@
 // This is the content script for the extension
 
-// p5 can not be executed the normal "global" way
-// Instead a sketch instance has to be manually created
-// This is done with the closure below
-var sketch = function(p5) {
+var clientID = 'eWxNW-xStnWuGcwpRWd-hD17g1GEGCDonqxQ8iAk';
+var clientSecret = 'ckGbfL_gcWWtdEV8x9B_g0Pp8ptcX5K6wshY_PUK';
+var baseUrl = 'https://api-alpha.clarifai.com/v1/';
 
-  // The setup function
-  p5.setup = function() {
+var accessToken; //for programmatically generating a new access token
 
-    p5.noCanvas();
-    // Look for all elements that are an "avatar" or "gravatar"
-    var avatars = document.getElementsByTagName('img');
-    console.log(avatars);
+var totalImages = 0;
 
-    // Call swapImg() for all of these DOM elements
-    for (var i = 0; i < avatars.length; i++) {
-      swapImg(avatars[i]);
+//First, generate a new access token from Clarifai when you load the page
+var data = {
+    'grant_type': 'client_credentials',
+    'client_id': clientID,
+    'client_secret': clientSecret
+  }
+
+
+ $.ajax({
+    'type': 'POST',
+    'url': baseUrl + 'token',
+    'data': data,
+    success: function (response) { 
+      console.log(response);
+      accessToken = response;
+      gotToken();
+    },
+    error: function (err) { 
+      console.log(err);
     }
+});
 
+function gotToken() {
+  console.log("I got the token!");
 
-    // Change the image to a file that is part of this extension
-    // The file must be made available in manifest.json
-    //   "web_accessible_resources": [
-    //      "images/rainbow.png"
-    // ]
-    function swapImg(img) {
-      console.log(img);
+  // Look for all the image elements on the page
+  var images = document.getElementsByTagName('img');
+  totalImages = images.length;
+  // console.log(images);
 
-      //NOT WORKING FOR SOME REASON -- not loading the p5 dom library
-      var div = p5.createDiv(''); 
-      console.log(div);
-      div.p5.style('background-color', 'blue');
-      // div.p5.size(img.width, img.height);
-      // div.p5.style('background-color', '#e6e6e6');
-      // var newimg = chrome.extension.getURL("images/rainbow.png");
-      // img.src = newimg;
-    }
-
-
-
+  // Call swapImg() for all of these DOM elements
+  for (var i = 0; i < totalImages; i++) {
+    swapImg(images[i]);
   }
 
 }
 
-// The above function closure is passed into a p5 object constructor
-// this starts the sketch.
-var myp5 = new p5(sketch);
+
+
+function swapImg(img) {
+  if ($(img).hasClass('replaced')) {
+    return false; //makes this exist the function
+  }
+
+  //hide the image element
+  img.style.display = 'none';
+  $(img).addClass('replaced'); //once we replace the images, change the class to 'replaced'
+
+
+  var parent = img.parentNode; //get the parent of the img on the page, in google images it is the a tag with image URL
+  
+
+  //create a new div to the grey container box
+  var div = document.createElement("div");
+  div.className = 'myDiv';
+
+
+  //set the size of the div to image width and height
+  div.style.width = parent.width;
+  div.style.height = '100%';
+  parent.appendChild(div); //append the div as a child to the image's parent
+
+
+  //create a second div that will contain the text so we can style it separately
+  var textDiv = document.createElement("div");
+  textDiv.className = 'textDiv';
+  textDiv.innerHTML = "This is a description of an image.";
+  div.appendChild(textDiv);
+
+  // console.log(parent);
+  // console.log("this is the height of the parent: " + parent.style.height, "this is the width of the parent: " + parent.style.width);
+  // console.log("this is the height of the div: " + div.style.height, "this is the width of the div: " + div.style.width);
+   
+}
+
+
+//use an event listener for scrolling - makes more images load once the scroll is happen
+$(window).on('scroll', function(e){ //e is the event object
+
+  console.log("SCROLLED");
+  var images = document.getElementsByTagName('img'); 
+
+  // console.log(images);
+
+  // Call swapImg() for all of these DOM elements
+  for (var i = 0; i < images.length; i++) {
+    swapImg(images[i]);
+  }
+});
+
+
+
+//look into jquery -- makes manipulating DOM elements easier
+//on scroll event listener
 
 
 

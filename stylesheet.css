@@ -1,0 +1,13 @@
+.myDiv {
+
+  display: block;
+  background: #e6e6e6;
+
+}
+
+.textDiv {
+  font-size:11px;
+  color: black;
+  letter-spacing: 1px;
+  padding: 20px;
+}
